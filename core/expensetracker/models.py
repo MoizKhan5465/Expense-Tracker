@@ -1,15 +1,17 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-
+import uuid
 # Create your models here.
 class User(AbstractUser):
     pass
 
 
 class Category(models.Model):
+    
     user=models.ForeignKey(User, on_delete=models.CASCADE,related_name="categories")
     name=models.CharField(max_length=100)
     created_at=models.DateTimeField(auto_now_add=True)
+    description=models.CharField(max_length=255, blank=True)
     
     class Meta:
         constraints = [
@@ -23,6 +25,7 @@ class Category(models.Model):
 
 
 class Expense(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user=models.ForeignKey(User, on_delete=models.CASCADE,related_name="expenses")
     category=models.ForeignKey('Category', on_delete=models.SET_NULL, null=True,blank =True,related_name="expenses")
     
