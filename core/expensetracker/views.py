@@ -3,18 +3,28 @@ from django.http import HttpResponse
 from django.db import models
 from rest_framework import generics, permissions
 from .models import Category,Expense
-from .serilizer import CategorySerializer  ,ExpenseSerializer,SummarySerializer
+from .serilizers import CategorySerializer  ,ExpenseSerializer,SummarySerializer
 from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework import viewsets
 from django.db.models import Sum, Count
 from decimal import Decimal
 # Create your views here.
+from rest_framework.pagination import PageNumberPagination
+from expensetracker.filters import ExpenseFilter
+from django_filters.rest_framework import DjangoFilterBackend
+
+class PagenumberPagiantion(PageNumberPagination):
+    page_size = 10
+    page_size_query_param='page_size'
+    max_page_size=100
+    
 
 
 class CategoryListView(generics.ListCreateAPIView):
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticated]
+    filterset_class = ExpenseFilter
 
     def get_queryset(self):
         User=self.request.user
@@ -25,10 +35,15 @@ class CategoryListView(generics.ListCreateAPIView):
 class ExpenseListView(generics.ListCreateAPIView):
     serializer_class = ExpenseSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class=PagenumberPagiantion
+
+    filter_backends = [DjangoFilterBackend]   # REQUIRED
+    filterset_class = ExpenseFilter           # REQUIRED
 
     def get_queryset(self):
         User=self.request.user
         queryset = Expense.objects.select_related('user', 'category')
+        
         if User.is_staff:
              return queryset
         return queryset.filter(user=User)

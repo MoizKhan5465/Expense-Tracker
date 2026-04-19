@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'core',
     'expensetracker',
     'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -121,3 +123,31 @@ STATIC_URL = 'static/'
 
 
 AUTH_USER_MODEL = 'expensetracker.User'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication', 
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+              
+    ),
+    'DEFAULT_PAGINATION_CLASS': (
+        'rest_framework.pagination.PageNumberPagination',
+    ),
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ),
+}
+
+
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),   # access token time
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),      # refresh token time
+    
+    "ROTATE_REFRESH_TOKENS": True,   #prevents replay attack
+    "BLACKLIST_AFTER_ROTATION": True,#invalidates old refresh tokens
+
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+
