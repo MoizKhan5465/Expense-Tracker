@@ -22,17 +22,26 @@ class PagenumberPagiantion(PageNumberPagination):
 
 
 class CategoryListView(generics.ListCreateAPIView):
+    queryset = Category.objects.none()
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticated]
-    filterset_class = ExpenseFilter
 
     def get_queryset(self):
-        User=self.request.user
-        if User.is_staff:
-             return Category.objects.all()
-        return Category.objects.filter(user=User)
+        user = self.request.user
+
+        # Schema generation or unauthenticated access
+        if getattr(self, "swagger_fake_view", False) or not user.is_authenticated:
+            return Category.objects.none()
+
+        # Admin access
+        if user.is_staff:
+            return Category.objects.all()
+
+        # User-specific data
+        return Category.objects.filter(user=user)
 
 class ExpenseListView(generics.ListCreateAPIView):
+    queryset = Expense.objects.none()
     serializer_class = ExpenseSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class=PagenumberPagiantion
@@ -43,6 +52,8 @@ class ExpenseListView(generics.ListCreateAPIView):
     def get_queryset(self):
         User=self.request.user
         queryset = Expense.objects.select_related('user', 'category')
+        if getattr(self, 'swagger_fake_view', False) or not User.is_authenticated:
+            return queryset.none()
         
         if User.is_staff:
              return queryset
@@ -60,6 +71,8 @@ class category_create_edit_delete_update(viewsets.ModelViewSet):
     def get_queryset(self):
         User=self.request.user
         queryset=super().get_queryset()
+        if getattr(self, 'swagger_fake_view', False) or not User.is_authenticated:
+            return queryset.none()
         if User.is_staff:
              return queryset
         return queryset.filter(user=User)
@@ -75,6 +88,8 @@ class Expense_create_edit_delete_update(viewsets.ModelViewSet):
     def get_queryset(self):
         User=self.request.user
         queryset=super().get_queryset()
+        if getattr(self, 'swagger_fake_view', False) or not User.is_authenticated:
+            return queryset.none()
         if User.is_staff:
              return queryset
         return queryset.filter(user=User)
@@ -91,6 +106,8 @@ class ExpenseSummaryView(generics.ListAPIView):
     def get_queryset(self):
         User=self.request.user
         queryset=super().get_queryset()
+        if getattr(self, 'swagger_fake_view', False) or not User.is_authenticated:
+             return queryset.none()
         return queryset.filter(user=User)
     
     
